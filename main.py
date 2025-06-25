@@ -1,88 +1,65 @@
-import pygame
-from pygame import Vector2
+
+from direct.showbase.ShowBase import ShowBase
+from panda3d.core import Vec3, DirectionalLight, AmbientLight
+from panda3d.core import NodePath
 import random
 
-pygame.init()
-windowx = 800
-windowy = 800
-screen = pygame.display.set_mode((windowx, windowy))
-background_colour = (234, 212, 252)
-pygame.display.set_caption('birb')
-pygame.display.flip()
-birdgenct = 50
-clock = pygame.time.Clock()
-running = True
-
 class Boid:
-    def __init__(self, position, velocity):
-        self.position = position  # 2D vector
+    def __init__(self, model, position, velocity):
+        self.model = model
+        self.position = position
         self.velocity = velocity
-        self.acceleration = Vector2(0, 0)
 
-    def update(self):
-        self.velocity += self.acceleration
-        self.position += self.velocity
-        self.acceleration *= 0
+    def update(self, dt):
+        self.position += self.velocity * dt
+        self.model.set_pos(self.position)
+        # Make the model face the direction it's moving
+        if self.velocity.length() > 0:
+            self.model.look_at(self.position + self.velocity)
 
-    def apply_behaviors(self, boids):
-        coh = cohesion(self, boids)
-        sep = separation(self, boids)
-        ali = alignment(self, boids)
-        self.acceleration += coh * 1.0 + sep * 1.5 + ali * 1.0
+class BoidApp(ShowBase):
+    def __init__(self):
+        ShowBase.__init__(self)
 
-    def draw(self, screen):
-        pygame.draw.circle(screen, (255, 255, 0), self.position, 5)
+        # Disable default camera control so we can set our own
+        self.disable_mouse()
 
-def cohesion(boid, boids):
-    boidpos = boid.position
-    boidvelo = boid.velocity
-    running_totalx = 0
-    running_totaly = 0
-    count = 0
-    for i in range(len(boids)):
-        if inRange(boid, boids[i]) and boid != boids[i]:
-            running_totalx += boids[i].position.x
-            running_totaly += boids[i].position.y
-            count += 1
-    if count != 0:
-        running_averagex = running_totalx / count
-        running_averagey = running_totaly / count
-    avgBoid = Vector2(running_averagex, running_averagey)
-    steering = avgBoid - steering   
-    return steering
+        # Set camera position and look at center
+        self.camera.set_pos(0, -50, 30)
+        self.camera.look_at(0, 0, 0)
 
-def separation(boid, boids):
-    return Vector2(0, 0)
+        # Lighting setup
+        dlight = DirectionalLight('dlight')
+        dlight.set_color((0.8, 0.8, 0.8, 1))
+        dlight_np = self.render.attach_new_node(dlight)
+        dlight_np.set_hpr(-30, -60, 0)
+        self.render.set_light(dlight_np)
 
-def alignment(boid, boids):
-    return Vector2(0, 0)
+        alight = AmbientLight('alight')
+        alight.set_color((0.2, 0.2, 0.2, 1))
+        alight_np = self.render.attach_new_node(alight)
+        self.render.set_light(alight_np)
 
-def inRange(boid1, boid2):
-    pos1 = boid1.position
-    pos2 = boid2.position
-    
-    
-def tooClose(boid1, boid2):
-    pos1 = boid1.position
-    pos2 = boid2.position    
-    
-boids = list()
-for _ in range(birdgenct):
-    birdx = random.random() * windowx 
-    birdy = random.random() * windowy
-    boids.append(Boid(Vector2(birdx, birdy), Vector2(random.randint(-1, 1), random.randint(-1, 1))))
+        # Load a simple model for the boid (a cone)
+        self.boids = []
+        for _ in range(20):
+            model = self.loader.load_model('models/misc/cone')  # built-in model in Panda3D
+            model.reparent_to(self.render)
+            model.set_scale(0.5)
+            pos = Vec3(random.uniform(-10, 10), random.uniform(-10, 10), random.uniform(0, 10))
+            vel = Vec3(random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-0.5, 0.5))
+            boid = Boid(model, pos, vel)
+            self.boids.append(boid)
 
-while running:
-    screen.fill(background_colour)
+        # Add the update task
+        self.task_mgr.add(self.update, 'update')
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    def update(self, task):
+        dt = globalClock.get_dt()
+        for boid in self.boids:
+            boid.update(dt)
+        return task.cont
 
-    for boid in boids:
-        boid.apply_behaviors(boids)
-        boid.update()
-        boid.draw(screen)
-
-    pygame.display.flip()
-    clock.tick(60)
+if __name__ == '__main__':
+    app = BoidApp()
+    app.run()
