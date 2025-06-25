@@ -60,6 +60,12 @@ def alignment(boid, boids):
 def inRange(boid1, boid2):
     pos1 = boid1.position
     pos2 = boid2.position
+    
+    
+def tooClose(boid1, boid2):
+    pos1 = boid1.position
+    pos2 = boid2.position    
+    
 boids = list()
 for _ in range(birdgenct):
     birdx = random.random() * windowx 
