@@ -38,32 +38,33 @@ def cohesion(boid, boids):
     boidvelo = boid.velocity
     running_totalx = 0
     running_totaly = 0
-    for i in range(boids):
-        running_totalx += boids(0[0[i]])
-        running_totaly += boids(0[1[i]])
-    running_averagex = running_totalx / i
-    running_averagey = running_totaly / i
-
-    return Vector2(0,0)
+    count = 0
+    for i in range(len(boids)):
+        if inRange(boid, boids[i]) and boid != boids[i]:
+            running_totalx += boids[i].position.x
+            running_totaly += boids[i].position.y
+            count += 1
+    if count != 0:
+        running_averagex = running_totalx / count
+        running_averagey = running_totaly / count
+    avgBoid = Vector2(running_averagex, running_averagey)
+    steering = avgBoid - steering   
+    return steering
 
 def separation(boid, boids):
-    return Vector2(0,0)
+    return Vector2(0, 0)
 
 def alignment(boid, boids):
-    return Vector2(0,0)
+    return Vector2(0, 0)
 
 def inRange(boid1, boid2):
-    
-
-
-
+    pos1 = boid1.position
+    pos2 = boid2.position
 boids = list()
 for _ in range(birdgenct):
     birdx = random.random() * windowx 
     birdy = random.random() * windowy
     boids.append(Boid(Vector2(birdx, birdy), Vector2(random.randint(-1, 1), random.randint(-1, 1))))
-    
-    
 
 while running:
     screen.fill(background_colour)
@@ -79,6 +80,3 @@ while running:
 
     pygame.display.flip()
     clock.tick(60)
-
-
-
