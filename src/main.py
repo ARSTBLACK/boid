@@ -119,6 +119,10 @@ def alignment(boid, boids):
         return steer
     else:
         return Vector2(0, 0)
+    
+# If near a predator, disperse quickly away from predator, and away from close birbs
+def disperse():
+    pass
 
 def border(boid, startOfEffect):
     posX = boid.position.x
@@ -134,7 +138,6 @@ def border(boid, startOfEffect):
         steer = steer + Vector2(0, (startOfEffect - posY) / startOfEffect)
     if posY > windowy - startOfEffect:
         steer = steer + Vector2(0, (windowy - posY) / startOfEffect * -1)
-
     return steer
 
 
