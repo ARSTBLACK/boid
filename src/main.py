@@ -40,7 +40,12 @@ class Boid:
         # pygame.draw.circle(screen, (255, 255, 0), self.position, 5)
         angle = math.atan2(self.velocity.y, self.velocity.x)
         size = 10
-        tip = self.position + self.velocity.normalize() * size
+        
+        # tip = self.position + self.velocity.normalize() * size
+        if self.velocity.length() > 0:
+            tip = self.position + self.velocity.normalize() * size
+        else:
+            tip = self.position
 
         left = self.position + Vector2(
             math.cos(angle + math.pi * 0.75),
